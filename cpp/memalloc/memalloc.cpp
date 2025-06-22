@@ -17,10 +17,20 @@ union header{
 typedef union header header_t;
 
 // head and tail pointer to know the extension of the list
-header_t *head, *tail;
+header_t *head{NULL}, *tail{NULL};
 
 // creates mutex lock so that no two threads can allocate memory at the same time
-pthread_mutex_t global_malloc_lock;
+pthread_mutex_t global_malloc_lock = PTHREAD_MUTEX_INITIALIZER;
+
+header_t *get_free_block(size_t size){
+    header_t *curr = head;
+    while(curr) {
+        if (curr->s.is_free && curr->s.size >= size)
+            return curr;
+        curr = curr->s.next;
+    }
+    return NULL;
+}
 
 // malloc: sees whether we need to allocate memory from OS or from free blocks
 void *malloc(size_t size){
@@ -53,16 +63,6 @@ void *malloc(size_t size){
     tail = header;
     pthread_mutex_unlock(&global_malloc_lock);
     return (void*)(header + 1);
-}
-
-header_t *get_free_block(size_t size){
-    header_t *curr = head;
-    while(curr) {
-        if (curr->s.is_free && curr->s.size >= size)
-            return curr;
-        curr = curr->s.next;
-    }
-    return NULL;
 }
 
 // free: frees the block to use it later when needed

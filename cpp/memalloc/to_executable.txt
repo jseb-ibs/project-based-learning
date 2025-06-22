@@ -1,0 +1,2 @@
+g++ -o memalloc.so -fPIC -shared memalloc.cpp
+export LD_PRELOAD=$PWD/memalloc.so
